@@ -11,7 +11,7 @@ function App() {
       <h2>React App</h2>
       {/* <button onClick={() => setCLicker(!isClicker)}>Toogle Clicker</button>
       {isClicker && <Clicker/>} */}
-      <button onClick={() => setTimer(!isTimer)}>Toogle tismer</button>
+      <button onClick={() => setTimer(!isTimer)}>Toogle timer</button>
       {isTimer && <Timer/>}
     </div>
   );

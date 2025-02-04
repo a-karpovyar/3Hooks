@@ -1,66 +1,71 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useEffect, useReducer } from "react";
+
+const countReducer = (state, { type }) => {
+
+    if (type === 'START') {
+        return {
+            ...state,
+            isCounting: true,
+        }
+    }
+    if (type === 'STOP') {
+        return {
+            ...state,
+            isCounting: false,
+        }
+    }
+    if (type === 'RESET') {
+        return {
+            count: 0,
+            isCounting: false,
+        }
+    }
+    if (type === 'TICK') {
+        return {
+            ...state,
+            count: state.count + 1,
+        }
+    }
+
+    return state;
+}
 
 function setDefaultValues() {
-  const userCount = localStorage.getItem("count");
-  return userCount ? +userCount : 0;
+    const userCount = localStorage.getItem("count");
+    return userCount ? +userCount : 0;
 }
 
 export default function Timer() {
-  const [count, setCount] = useState(setDefaultValues());
-  const [isCounting, setIsCounting] = useState(false);
-  const timerIdRef = useRef(null);
+    const [{ count, isCounting }, dispatch] = useReducer(countReducer, { count: setDefaultValues(), isCounting: false });
 
-  const handleReset = () => {
-    setCount(0);
-    setIsCounting(false);
-  };
+    useEffect(() => {
+        localStorage.setItem("count", count);
+    }, [count]);
 
-  const handleStart = () => {
-    setIsCounting(true);
-  };
+    useEffect(() => {
+        let timerId = null;
+        if (isCounting) {
+            timerId = setInterval(() => {
+                dispatch({ type: 'TICK' })
+            }, 1000);
+        }
+        return () => {
+            timerId && clearInterval(timerId);
+            timerId = 0;
+        };
+    }, [isCounting]);
 
-  const handleStop = () => {
-    setIsCounting(false);
-  };
-  useEffect(() => {
-    localStorage.setItem("count", count);
-  }, [count]);
-  useEffect(() => {
-    if (isCounting) {
-      timerIdRef.current = setInterval(() => {
-        setCount((prevCount) => prevCount + 1);
-      }, 1000);
-    }
-    return () => {
-        timerIdRef.current && clearInterval(timerIdRef.current);
-      timerIdRef.current = 0;
-    };
-  }, [isCounting]);
-
-  // componentDidMount() {
-  //     const userCount = localStorage.getItem('count');
-  //     if (userCount) this.setState({ count: +userCount });
-  // }
-
-  // componentDidUpdate() {
-  //     localStorage.setItem('count', this.state.count);
-  // }
-
-  // componentWillUnmount() {
-  //     clearInterval(this.counterId);
-  //     this.handleStop();
-  // }
-
-  return (
-    <div className="timer">
-      <h1>React Timer</h1>
-      <h3>{count}</h3>
-      {!isCounting ? (
-        <button onClick={handleStart}>Start</button>
-      ) : (
-        <button onClick={handleStop}>Stop</button>
-      )}
-      <button onClick={handleReset}>Reset</button>
-    </div>
-  );
+    return (
+        <div className="timer">
+            <h1>React Timer</h1>
+            <h3>{count}</h3>
+            {!isCounting ? (
+                <button onClick={() => dispatch({ type: 'START' })}>Start</button>
+            ) : (
+                <button onClick={() => dispatch({ type: 'STOP' })}>Stop</button>
+            )}
+            <button onClick={() => dispatch({ type: 'RESET' })}>Reset</button>
+        </div>
+    );
 }
+
